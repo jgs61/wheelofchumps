@@ -12,6 +12,25 @@ const WheelOfChumps = () => {
   const intervalRef = useRef(null);
   const rotationRef = useRef(null);
 
+  const MAX_NAME_LENGTH = 500;
+  const MAX_TASK_LENGTH = 200;
+  const MAX_PARTICIPANTS = 50;
+  const ALLOWED_CHARS = /^[a-zA-Z0-9\s,.\-']*$/;
+
+  const handleNameInput = (e) => {
+    const value = e.target.value;
+    if (value.length <= MAX_NAME_LENGTH && ALLOWED_CHARS.test(value)) {
+      setNames(value);
+    }
+  };
+
+  const handleTaskInput = (e) => {
+    const value = e.target.value;
+    if (value.length <= MAX_TASK_LENGTH && ALLOWED_CHARS.test(value)) {
+      setTask(value);
+    }
+  };
+
   const handleReset = () => {
     setResult(null);
     setCurrentDisplay('');
@@ -22,6 +41,10 @@ const WheelOfChumps = () => {
     const nameList = names.split(',').map(n => n.trim()).filter(Boolean);
     if (nameList.length === 0 || !task) {
       alert('Please provide at least one name and a task.');
+      return;
+    }
+    if (nameList.length > MAX_PARTICIPANTS) {
+      alert(`Too many participants! Maximum is ${MAX_PARTICIPANTS}.`);
       return;
     }
 
@@ -131,13 +154,13 @@ const WheelOfChumps = () => {
             <input
               placeholder="Enter names separated by commas"
               value={names}
-              onChange={e => setNames(e.target.value)}
+              onChange={handleNameInput}
               className="w-full p-3 rounded-lg text-black bg-white/95 placeholder:text-gray-500 focus:outline-none focus:ring-2 focus:ring-fuchsia-500 transition-all"
             />
             <input
               placeholder="Enter a task (e.g. Wash the dishes)"
               value={task}
-              onChange={e => setTask(e.target.value)}
+              onChange={handleTaskInput}
               className="w-full p-3 rounded-lg text-black bg-white/95 placeholder:text-gray-500 focus:outline-none focus:ring-2 focus:ring-fuchsia-500 transition-all"
             />
             <button
