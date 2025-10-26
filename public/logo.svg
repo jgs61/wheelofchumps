@@ -1,0 +1,69 @@
+<svg width="200" height="200" viewBox="0 0 200 200" xmlns="http://www.w3.org/2000/svg">
+  <defs>
+    <linearGradient id="wheelGradient" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" style="stop-color:#ec4899;stop-opacity:1" />
+      <stop offset="50%" style="stop-color:#d946ef;stop-opacity:1" />
+      <stop offset="100%" style="stop-color:#22d3ee;stop-opacity:1" />
+    </linearGradient>
+    <filter id="glow">
+      <feGaussianBlur stdDeviation="4" result="coloredBlur"/>
+      <feMerge>
+        <feMergeNode in="coloredBlur"/>
+        <feMergeNode in="SourceGraphic"/>
+      </feMerge>
+    </filter>
+    <filter id="strongGlow">
+      <feGaussianBlur stdDeviation="8" result="coloredBlur"/>
+      <feMerge>
+        <feMergeNode in="coloredBlur"/>
+        <feMergeNode in="SourceGraphic"/>
+      </feMerge>
+    </filter>
+  </defs>
+
+  <!-- Background circle -->
+  <circle cx="100" cy="100" r="95" fill="none" stroke="url(#wheelGradient)" stroke-width="3" filter="url(#glow)" opacity="0.6"/>
+
+  <!-- Outer ring -->
+  <circle cx="100" cy="100" r="85" fill="none" stroke="url(#wheelGradient)" stroke-width="6" filter="url(#strongGlow)"/>
+
+  <!-- Wheel spokes (12 segments) -->
+  <g opacity="0.8" filter="url(#glow)">
+    <!-- Pink spokes -->
+    <line x1="100" y1="100" x2="100" y2="20" stroke="#ec4899" stroke-width="2"/>
+    <line x1="100" y1="100" x2="143.3" y2="35" stroke="#ec4899" stroke-width="2"/>
+    <line x1="100" y1="100" x2="165" y2="100" stroke="#ec4899" stroke-width="2"/>
+    <line x1="100" y1="100" x2="143.3" y2="165" stroke="#ec4899" stroke-width="2"/>
+
+    <!-- Fuchsia spokes -->
+    <line x1="100" y1="100" x2="100" y2="180" stroke="#d946ef" stroke-width="2"/>
+    <line x1="100" y1="100" x2="56.7" y2="165" stroke="#d946ef" stroke-width="2"/>
+    <line x1="100" y1="100" x2="35" y2="100" stroke="#d946ef" stroke-width="2"/>
+    <line x1="100" y1="100" x2="56.7" y2="35" stroke="#d946ef" stroke-width="2"/>
+
+    <!-- Cyan accents -->
+    <line x1="100" y1="100" x2="173.3" y2="75" stroke="#22d3ee" stroke-width="2"/>
+    <line x1="100" y1="100" x2="173.3" y2="125" stroke="#22d3ee" stroke-width="2"/>
+    <line x1="100" y1="100" x2="26.7" y2="125" stroke="#22d3ee" stroke-width="2"/>
+    <line x1="100" y1="100" x2="26.7" y2="75" stroke="#22d3ee" stroke-width="2"/>
+  </g>
+
+  <!-- Middle ring -->
+  <circle cx="100" cy="100" r="50" fill="none" stroke="#a855f7" stroke-width="3" opacity="0.6"/>
+
+  <!-- Inner ring -->
+  <circle cx="100" cy="100" r="30" fill="none" stroke="#22d3ee" stroke-width="2" filter="url(#glow)"/>
+
+  <!-- Center hub -->
+  <circle cx="100" cy="100" r="15" fill="url(#wheelGradient)" filter="url(#strongGlow)"/>
+  <circle cx="100" cy="100" r="10" fill="#0f0c29" stroke="#22d3ee" stroke-width="2"/>
+
+  <!-- Pointer at top -->
+  <polygon points="100,5 110,25 90,25" fill="#22d3ee" filter="url(#strongGlow)"/>
+
+  <!-- Corner brackets for modern touch -->
+  <path d="M 10 30 L 10 10 L 30 10" fill="none" stroke="#22d3ee" stroke-width="2" opacity="0.7"/>
+  <path d="M 170 10 L 190 10 L 190 30" fill="none" stroke="#ec4899" stroke-width="2" opacity="0.7"/>
+  <path d="M 190 170 L 190 190 L 170 190" fill="none" stroke="#d946ef" stroke-width="2" opacity="0.7"/>
+  <path d="M 30 190 L 10 190 L 10 170" fill="none" stroke="#22d3ee" stroke-width="2" opacity="0.7"/>
+</svg>

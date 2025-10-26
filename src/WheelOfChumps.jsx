@@ -1,15 +1,21 @@
-import React, { useState } from 'react';
-import { Button } from '@/components/ui/button';
-import { Input } from '@/components/ui/input';
-import { Card, CardContent } from '@/components/ui/card';
-import { motion } from 'framer-motion';
+import React, { useState, useEffect, useRef } from 'react';
+import { motion, AnimatePresence } from 'framer-motion';
 
 const WheelOfChumps = () => {
   const [names, setNames] = useState('');
   const [task, setTask] = useState('');
   const [spinning, setSpinning] = useState(false);
   const [result, setResult] = useState(null);
-  const [message, setMessage] = useState('');
+  const [currentDisplay, setCurrentDisplay] = useState('');
+  const [rotation, setRotation] = useState(0);
+  const intervalRef = useRef(null);
+  const rotationRef = useRef(null);
+
+  const handleReset = () => {
+    setResult(null);
+    setCurrentDisplay('');
+    setRotation(0);
+  };
 
   const handleSpin = () => {
     const nameList = names.split(',').map(n => n.trim()).filter(Boolean);
@@ -18,67 +24,276 @@ const WheelOfChumps = () => {
       return;
     }
 
-    setMessage('Round and round it goes, where the wheel of chumps stops, nobody knows! 🌌');
     setSpinning(true);
     setResult(null);
+    setRotation(0);
 
-    setTimeout(() => {
-      const chosen = nameList[Math.floor(Math.random() * nameList.length)];
-      setResult(chosen);
-      setMessage(`Ohhh noes! It looks like <span class='text-pink-500 font-extrabold'>${chosen}</span> is the chump that has to <span class='text-cyan-400 font-bold'>${task}</span>!`);
-      setSpinning(false);
-    }, 3000);
+    let elapsed = 0;
+    let lastTime = Date.now();
+    let currentRotation = 0;
+
+    // Wheel rotation animation
+    const rotateWheel = () => {
+      const now = Date.now();
+      const delta = now - lastTime;
+
+      // Calculate rotation speed based on elapsed time (starts fast, gets slower)
+      let rotationSpeed;
+      if (elapsed < 1000) {
+        rotationSpeed = 20; // Super fast
+      } else if (elapsed < 2000) {
+        rotationSpeed = 12; // Fast
+      } else if (elapsed < 3000) {
+        rotationSpeed = 6; // Medium
+      } else if (elapsed < 3500) {
+        rotationSpeed = 2; // Slow
+      } else {
+        rotationSpeed = 0; // Stop
+      }
+
+      if (rotationSpeed > 0) {
+        currentRotation += rotationSpeed;
+        setRotation(currentRotation);
+        rotationRef.current = requestAnimationFrame(rotateWheel);
+      }
+    };
+
+    rotateWheel();
+
+    // Animation timing: fast -> slow with dramatic buildup
+    const cycleName = () => {
+      const now = Date.now();
+      elapsed += now - lastTime;
+      lastTime = now;
+
+      const randomName = nameList[Math.floor(Math.random() * nameList.length)];
+      setCurrentDisplay(randomName);
+
+      // Calculate delay based on elapsed time (starts fast, gets slower)
+      let delay;
+      if (elapsed < 1000) {
+        delay = 50; // Super fast
+      } else if (elapsed < 2000) {
+        delay = 100; // Fast
+      } else if (elapsed < 3000) {
+        delay = 200; // Medium
+      } else if (elapsed < 3500) {
+        delay = 400; // Slow
+      } else {
+        // Final selection
+        const chosen = nameList[Math.floor(Math.random() * nameList.length)];
+        setResult(chosen);
+        setCurrentDisplay(chosen);
+        setSpinning(false);
+        if (rotationRef.current) {
+          cancelAnimationFrame(rotationRef.current);
+        }
+        return;
+      }
+
+      intervalRef.current = setTimeout(cycleName, delay);
+    };
+
+    cycleName();
   };
 
+  useEffect(() => {
+    return () => {
+      if (intervalRef.current) {
+        clearTimeout(intervalRef.current);
+      }
+      if (rotationRef.current) {
+        cancelAnimationFrame(rotationRef.current);
+      }
+    };
+  }, []);
+
   return (
-    <div className="relative min-h-screen bg-gradient-to-br from-[#0f0c29] via-[#302b63] to-[#24243e] text-white flex flex-col items-center justify-center p-6 font-mono overflow-hidden">
-      <h1 className="text-5xl font-extrabold mb-8 z-10 text-transparent bg-clip-text bg-gradient-to-r from-pink-400 via-fuchsia-500 to-purple-600 drop-shadow-[0_0_20px_#f472b6] animate-pulse">
-        The Wheel of Chumps
-      </h1>
+    <div className="relative min-h-screen bg-gradient-to-br from-[#0f0c29] via-[#302b63] to-[#24243e] text-white font-mono overflow-hidden">
+      {/* Header - Logo and Title in top left */}
+      <div className="absolute top-4 left-4 z-20 flex items-center gap-2">
+        {/* Logo */}
+        <motion.div
+          initial={{ scale: 0, rotate: -180 }}
+          animate={{ scale: 1, rotate: 0 }}
+          transition={{ duration: 0.8, ease: 'easeOut' }}
+        >
+          <img src="/logo.svg" alt="Wheel of Chumps Logo" className="w-12 h-12 drop-shadow-[0_0_20px_rgba(236,72,153,0.6)]" />
+        </motion.div>
 
-      <Card className="w-full max-w-xl bg-white/10 backdrop-blur-md border-fuchsia-500/60 border shadow-xl z-10">
-        <CardContent className="space-y-4">
-          <Input
-            placeholder="Enter names separated by commas"
-            value={names}
-            onChange={e => setNames(e.target.value)}
-            className="text-black"
-          />
-          <Input
-            placeholder="Enter a task (e.g. Wash the dishes)"
-            value={task}
-            onChange={e => setTask(e.target.value)}
-            className="text-black"
-          />
-          <Button onClick={handleSpin} disabled={spinning} className="w-full font-bold text-lg bg-gradient-to-r from-pink-500 to-purple-600 hover:from-purple-600 hover:to-pink-500 text-white shadow-lg shadow-pink-500/30">
-            ⚡ Spin the Wheel!
-          </Button>
-        </CardContent>
-      </Card>
-
-      <div className="flex justify-center items-center h-64 mt-6 z-10">
-        {spinning && (
-          <motion.div
-            animate={{ rotate: 360 * 6 }}
-            transition={{ duration: 3, ease: 'easeInOut' }}
-            className="w-52 h-52 rounded-full border-[18px] border-cyan-400 shadow-[0_0_50px_rgba(255,0,255,0.6)] animate-spin-slow bg-gradient-to-tr from-cyan-400 via-purple-600 to-pink-500 relative"
-          >
-            <div className="absolute inset-0 flex items-center justify-center text-2xl text-white font-extrabold animate-pulse">
-              🎯
-            </div>
-          </motion.div>
-        )}
+        {/* Title */}
+        <h1 className="text-xl font-extrabold text-transparent bg-clip-text bg-gradient-to-r from-pink-400 via-fuchsia-500 to-purple-600 drop-shadow-[0_0_15px_#f472b6]">
+          The Wheel of Chumps
+        </h1>
       </div>
 
-      {message && (
-        <div
-          className="text-center mt-10 text-2xl font-bold bg-black/60 p-6 rounded-xl shadow-xl border border-pink-500 max-w-xl z-10"
-          dangerouslySetInnerHTML={{ __html: message }}
-        />
-      )}
+      {/* Main Content Area */}
+      <div className="flex flex-col items-center justify-center min-h-screen p-6 pt-20">
+        {/* Input Card - Only show when not spinning and no result */}
+        {!spinning && !result && (
+          <motion.div
+            initial={{ opacity: 0, y: 20 }}
+            animate={{ opacity: 1, y: 0 }}
+            exit={{ opacity: 0, y: -20 }}
+            className="w-full max-w-xl bg-white/5 backdrop-blur-md border border-fuchsia-500/40 shadow-2xl z-10 p-8 rounded-2xl space-y-4 mt-32"
+          >
+            <input
+              placeholder="Enter names separated by commas"
+              value={names}
+              onChange={e => setNames(e.target.value)}
+              className="w-full p-3 rounded-lg text-black bg-white/95 placeholder:text-gray-500 focus:outline-none focus:ring-2 focus:ring-fuchsia-500 transition-all"
+            />
+            <input
+              placeholder="Enter a task (e.g. Wash the dishes)"
+              value={task}
+              onChange={e => setTask(e.target.value)}
+              className="w-full p-3 rounded-lg text-black bg-white/95 placeholder:text-gray-500 focus:outline-none focus:ring-2 focus:ring-fuchsia-500 transition-all"
+            />
+            <button
+              onClick={handleSpin}
+              className="w-full p-4 font-bold text-lg bg-gradient-to-r from-pink-500 to-purple-600 hover:from-purple-600 hover:to-pink-500 text-white rounded-lg shadow-lg shadow-pink-500/30 hover:shadow-pink-500/50 transition-all duration-300 uppercase tracking-wider"
+            >
+              Spin the Wheel
+            </button>
+          </motion.div>
+        )}
+
+        {/* Wheel Display */}
+        <div className="flex flex-col justify-center items-center mt-4 z-10 w-full min-h-[650px]">
+          {(spinning || result) && (
+            <div className="relative w-[550px] h-[550px] flex items-center justify-center">
+              {/* Spinning Wheel */}
+              <div
+                className="absolute inset-0 flex items-center justify-center"
+                style={{ transform: `rotate(${rotation}deg)`, transition: 'transform 0.05s linear' }}
+              >
+                <div className="w-[550px] h-[550px] relative">
+                  {/* Outer gradient ring */}
+                  <svg className="absolute inset-0 w-full h-full" style={{ filter: 'drop-shadow(0 0 30px rgba(236, 72, 153, 0.6))' }}>
+                    <defs>
+                      <linearGradient id="wheelGradient" x1="0%" y1="0%" x2="100%" y2="100%">
+                        <stop offset="0%" style={{ stopColor: '#ec4899' }} />
+                        <stop offset="50%" style={{ stopColor: '#d946ef' }} />
+                        <stop offset="100%" style={{ stopColor: '#22d3ee' }} />
+                      </linearGradient>
+                    </defs>
+                    <circle cx="275" cy="275" r="268" fill="none" stroke="url(#wheelGradient)" strokeWidth="10" opacity="0.8"/>
+                    <circle cx="275" cy="275" r="252" fill="none" stroke="url(#wheelGradient)" strokeWidth="14"/>
+                  </svg>
+
+                  {/* Wheel spokes - 12 segments */}
+                  <div className="absolute inset-0 flex items-center justify-center">
+                    {[...Array(12)].map((_, i) => {
+                      const colors = ['#ec4899', '#d946ef', '#22d3ee', '#a855f7'];
+                      const color = colors[i % 4];
+                      return (
+                        <div
+                          key={i}
+                          className="absolute w-2 h-60"
+                          style={{
+                            left: '50%',
+                            top: '50%',
+                            transformOrigin: 'center top',
+                            transform: `translateX(-50%) rotate(${i * 30}deg)`,
+                            background: `linear-gradient(to bottom, ${color}, transparent)`,
+                            boxShadow: `0 0 12px ${color}`,
+                            marginTop: '15px'
+                          }}
+                        />
+                      );
+                    })}
+                  </div>
+
+                  {/* Middle ring */}
+                  <div className="absolute inset-20 rounded-full border-3 border-purple-500/50"
+                       style={{ boxShadow: '0 0 25px rgba(168, 85, 247, 0.4)' }}></div>
+
+                  {/* Inner ring */}
+                  <div className="absolute inset-32 rounded-full border-3 border-cyan-400/60"
+                       style={{ boxShadow: '0 0 25px rgba(34, 211, 238, 0.5)' }}></div>
+
+                  {/* Center hub */}
+                  <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2">
+                    <div className="w-20 h-20 rounded-full bg-gradient-to-br from-pink-500 via-fuchsia-500 to-cyan-400"
+                         style={{ boxShadow: '0 0 50px rgba(236, 72, 153, 0.8)' }}>
+                      <div className="absolute inset-3 rounded-full bg-[#0f0c29] border-2 border-cyan-400"></div>
+                    </div>
+                  </div>
+                </div>
+              </div>
+
+              {/* Static pointer/indicator at top */}
+              <div className="absolute top-4 left-1/2 -translate-x-1/2 z-20">
+                <div className="w-0 h-0 border-l-[16px] border-r-[16px] border-t-[28px] border-l-transparent border-r-transparent border-t-cyan-400"
+                     style={{
+                       filter: 'drop-shadow(0 0 15px rgba(34, 211, 238, 1))'
+                     }}>
+                </div>
+              </div>
+
+              {/* Center display container - Only show when result is ready */}
+              {result && !spinning && (
+                <motion.div
+                  initial={{ scale: 0.5, opacity: 0 }}
+                  animate={{ scale: 1, opacity: 1 }}
+                  transition={{ duration: 0.6, ease: 'easeOut' }}
+                  className="relative z-10"
+                >
+                  {/* Corner brackets */}
+                  <div className="absolute -top-6 -left-6 w-8 h-8 border-t-2 border-l-2 border-cyan-400"></div>
+                  <div className="absolute -top-6 -right-6 w-8 h-8 border-t-2 border-r-2 border-cyan-400"></div>
+                  <div className="absolute -bottom-6 -left-6 w-8 h-8 border-b-2 border-l-2 border-cyan-400"></div>
+                  <div className="absolute -bottom-6 -right-6 w-8 h-8 border-b-2 border-r-2 border-cyan-400"></div>
+
+                  {/* Display window */}
+                  <div className="w-80 h-80 bg-black/90 backdrop-blur-md border-2 border-cyan-400/60 rounded-2xl p-8 shadow-[0_0_80px_rgba(34,211,238,0.6)] flex items-center justify-center">
+                    <div className="text-center space-y-4">
+                      <div className="text-yellow-400 text-xl font-bold mb-3"
+                           style={{ textShadow: '0 0 20px rgba(250, 204, 21, 0.8)' }}>
+                        Uh oh! Looks like...
+                      </div>
+                      <motion.div
+                        animate={{
+                          filter: [
+                            'drop-shadow(0 0 20px rgba(236, 72, 153, 0.8))',
+                            'drop-shadow(0 0 40px rgba(236, 72, 153, 1))',
+                            'drop-shadow(0 0 20px rgba(236, 72, 153, 0.8))',
+                          ]
+                        }}
+                        transition={{ duration: 1.5, repeat: Infinity }}
+                        className="text-6xl font-black text-transparent bg-clip-text bg-gradient-to-r from-pink-400 via-fuchsia-500 to-purple-600 mb-4"
+                      >
+                        {result}
+                      </motion.div>
+                      <div className="text-xl text-white/90 font-semibold mb-4">
+                        will <span className="text-cyan-400 font-bold" style={{ textShadow: '0 0 15px rgba(34, 211, 238, 0.8)' }}>{task}</span>
+                      </div>
+                      <div className="text-fuchsia-400 text-base font-bold italic pt-2 border-t border-fuchsia-500/30"
+                           style={{ textShadow: '0 0 20px rgba(217, 70, 239, 0.8)' }}>
+                        The wheel has spoken.
+                      </div>
+                    </div>
+                  </div>
+                </motion.div>
+              )}
+            </div>
+          )}
+
+          {/* Spin Again Button - Always reserve space, only visible after result */}
+          <motion.button
+            initial={{ opacity: 0, scale: 0.9 }}
+            animate={{ opacity: result && !spinning ? 1 : 0, scale: result && !spinning ? 1 : 0.9 }}
+            transition={{ delay: 0.5 }}
+            onClick={handleReset}
+            className="mt-6 px-8 py-3 font-bold text-lg bg-gradient-to-r from-cyan-500 to-purple-600 hover:from-purple-600 hover:to-cyan-500 text-white rounded-lg shadow-lg shadow-cyan-500/30 hover:shadow-cyan-500/50 transition-all duration-300 uppercase tracking-wider z-10"
+            style={{ visibility: result && !spinning ? 'visible' : 'hidden', pointerEvents: result && !spinning ? 'auto' : 'none' }}
+          >
+            Spin Again
+          </motion.button>
+        </div>
+      </div>
     </div>
   );
 };
 
 export default WheelOfChumps;
-
