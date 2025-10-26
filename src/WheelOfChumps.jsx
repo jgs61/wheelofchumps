@@ -33,12 +33,10 @@ const WheelOfChumps = () => {
     let lastTime = Date.now();
     let currentRotation = 0;
 
-    // Wheel rotation animation
     const rotateWheel = () => {
       const now = Date.now();
       const delta = now - lastTime;
 
-      // Calculate rotation speed based on elapsed time (starts fast, gets slower)
       let rotationSpeed;
       if (elapsed < 1000) {
         rotationSpeed = 20; // Super fast
@@ -61,7 +59,6 @@ const WheelOfChumps = () => {
 
     rotateWheel();
 
-    // Animation timing: fast -> slow with dramatic buildup
     const cycleName = () => {
       const now = Date.now();
       elapsed += now - lastTime;
@@ -70,7 +67,6 @@ const WheelOfChumps = () => {
       const randomName = nameList[Math.floor(Math.random() * nameList.length)];
       setCurrentDisplay(randomName);
 
-      // Calculate delay based on elapsed time (starts fast, gets slower)
       let delay;
       if (elapsed < 1000) {
         delay = 50; // Super fast
@@ -81,7 +77,6 @@ const WheelOfChumps = () => {
       } else if (elapsed < 3500) {
         delay = 400; // Slow
       } else {
-        // Final selection
         const chosen = nameList[Math.floor(Math.random() * nameList.length)];
         setResult(chosen);
         setCurrentDisplay(chosen);
@@ -111,9 +106,7 @@ const WheelOfChumps = () => {
 
   return (
     <div className="relative min-h-screen bg-gradient-to-br from-[#0f0c29] via-[#302b63] to-[#24243e] text-white font-mono overflow-hidden">
-      {/* Header - Logo and Title in top left */}
       <div className="absolute top-4 left-4 z-20 flex items-center gap-2">
-        {/* Logo */}
         <motion.div
           initial={{ scale: 0, rotate: -180 }}
           animate={{ scale: 1, rotate: 0 }}
@@ -122,15 +115,12 @@ const WheelOfChumps = () => {
           <img src={logo} alt="Wheel of Chumps Logo" className="w-12 h-12 drop-shadow-[0_0_20px_rgba(236,72,153,0.6)]" />
         </motion.div>
 
-        {/* Title */}
         <h1 className="text-xl font-extrabold text-transparent bg-clip-text bg-gradient-to-r from-pink-400 via-fuchsia-500 to-purple-600 drop-shadow-[0_0_15px_#f472b6]">
           The Wheel of Chumps
         </h1>
       </div>
 
-      {/* Main Content Area */}
       <div className="flex flex-col items-center justify-center min-h-screen p-6 pt-20">
-        {/* Input Card - Only show when not spinning and no result */}
         {!spinning && !result && (
           <motion.div
             initial={{ opacity: 0, y: 20 }}
@@ -159,17 +149,14 @@ const WheelOfChumps = () => {
           </motion.div>
         )}
 
-        {/* Wheel Display */}
         <div className="flex flex-col justify-center items-center mt-4 z-10 w-full min-h-[650px]">
           {(spinning || result) && (
             <div className="relative w-[550px] h-[550px] flex items-center justify-center">
-              {/* Spinning Wheel */}
               <div
                 className="absolute inset-0 flex items-center justify-center"
                 style={{ transform: `rotate(${rotation}deg)`, transition: 'transform 0.05s linear' }}
               >
                 <div className="w-[550px] h-[550px] relative">
-                  {/* Outer gradient ring */}
                   <svg className="absolute inset-0 w-full h-full" style={{ filter: 'drop-shadow(0 0 30px rgba(236, 72, 153, 0.6))' }}>
                     <defs>
                       <linearGradient id="wheelGradient" x1="0%" y1="0%" x2="100%" y2="100%">
@@ -182,7 +169,6 @@ const WheelOfChumps = () => {
                     <circle cx="275" cy="275" r="252" fill="none" stroke="url(#wheelGradient)" strokeWidth="14"/>
                   </svg>
 
-                  {/* Wheel spokes - 12 segments */}
                   <div className="absolute inset-0 flex items-center justify-center">
                     {[...Array(12)].map((_, i) => {
                       const colors = ['#ec4899', '#d946ef', '#22d3ee', '#a855f7'];
@@ -205,15 +191,12 @@ const WheelOfChumps = () => {
                     })}
                   </div>
 
-                  {/* Middle ring */}
                   <div className="absolute inset-20 rounded-full border-3 border-purple-500/50"
                        style={{ boxShadow: '0 0 25px rgba(168, 85, 247, 0.4)' }}></div>
 
-                  {/* Inner ring */}
                   <div className="absolute inset-32 rounded-full border-3 border-cyan-400/60"
                        style={{ boxShadow: '0 0 25px rgba(34, 211, 238, 0.5)' }}></div>
 
-                  {/* Center hub */}
                   <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2">
                     <div className="w-20 h-20 rounded-full bg-gradient-to-br from-pink-500 via-fuchsia-500 to-cyan-400"
                          style={{ boxShadow: '0 0 50px rgba(236, 72, 153, 0.8)' }}>
@@ -223,7 +206,6 @@ const WheelOfChumps = () => {
                 </div>
               </div>
 
-              {/* Static pointer/indicator at top */}
               <div className="absolute top-4 left-1/2 -translate-x-1/2 z-20">
                 <div className="w-0 h-0 border-l-[16px] border-r-[16px] border-t-[28px] border-l-transparent border-r-transparent border-t-cyan-400"
                      style={{
@@ -232,7 +214,6 @@ const WheelOfChumps = () => {
                 </div>
               </div>
 
-              {/* Center display container - Only show when result is ready */}
               {result && !spinning && (
                 <motion.div
                   initial={{ scale: 0.5, opacity: 0 }}
@@ -240,13 +221,11 @@ const WheelOfChumps = () => {
                   transition={{ duration: 0.6, ease: 'easeOut' }}
                   className="relative z-10"
                 >
-                  {/* Corner brackets */}
                   <div className="absolute -top-6 -left-6 w-8 h-8 border-t-2 border-l-2 border-cyan-400"></div>
                   <div className="absolute -top-6 -right-6 w-8 h-8 border-t-2 border-r-2 border-cyan-400"></div>
                   <div className="absolute -bottom-6 -left-6 w-8 h-8 border-b-2 border-l-2 border-cyan-400"></div>
                   <div className="absolute -bottom-6 -right-6 w-8 h-8 border-b-2 border-r-2 border-cyan-400"></div>
 
-                  {/* Display window */}
                   <div className="w-80 h-80 bg-black/90 backdrop-blur-md border-2 border-cyan-400/60 rounded-2xl p-8 shadow-[0_0_80px_rgba(34,211,238,0.6)] flex items-center justify-center">
                     <div className="text-center space-y-4">
                       <div className="text-yellow-400 text-xl font-bold mb-3"
@@ -280,7 +259,6 @@ const WheelOfChumps = () => {
             </div>
           )}
 
-          {/* Spin Again Button - Always reserve space, only visible after result */}
           <motion.button
             initial={{ opacity: 0, scale: 0.9 }}
             animate={{ opacity: result && !spinning ? 1 : 0, scale: result && !spinning ? 1 : 0.9 }}
