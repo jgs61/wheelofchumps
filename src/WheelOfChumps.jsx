@@ -1,5 +1,6 @@
 import React, { useState, useEffect, useRef } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
+import logo from './assets/logo.svg?url';
 
 const WheelOfChumps = () => {
   const [names, setNames] = useState('');
@@ -118,7 +119,7 @@ const WheelOfChumps = () => {
           animate={{ scale: 1, rotate: 0 }}
           transition={{ duration: 0.8, ease: 'easeOut' }}
         >
-          <img src="/logo.svg" alt="Wheel of Chumps Logo" className="w-12 h-12 drop-shadow-[0_0_20px_rgba(236,72,153,0.6)]" />
+          <img src={logo} alt="Wheel of Chumps Logo" className="w-12 h-12 drop-shadow-[0_0_20px_rgba(236,72,153,0.6)]" />
         </motion.div>
 
         {/* Title */}
