@@ -1,5 +1,8 @@
 import React, { useState, useEffect, useRef } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
+import toast, { Toaster } from 'react-hot-toast';
+import confetti from 'canvas-confetti';
+import { toPng } from 'html-to-image';
 import logo from './assets/logo.svg?url';
 
 const WheelOfChumps = () => {
@@ -11,6 +14,7 @@ const WheelOfChumps = () => {
   const [rotation, setRotation] = useState(0);
   const intervalRef = useRef(null);
   const rotationRef = useRef(null);
+  const resultRef = useRef(null);
 
   const MAX_NAME_LENGTH = 500;
   const MAX_TASK_LENGTH = 200;
@@ -37,14 +41,37 @@ const WheelOfChumps = () => {
     setRotation(0);
   };
 
+  const handleCopyImage = async () => {
+    if (!resultRef.current) return;
+
+    try {
+      const blob = await toPng(resultRef.current, {
+        cacheBust: true,
+        backgroundColor: 'transparent',
+        pixelRatio: 2,
+      }).then(dataUrl => {
+        return fetch(dataUrl).then(res => res.blob());
+      });
+
+      await navigator.clipboard.write([
+        new ClipboardItem({ 'image/png': blob })
+      ]);
+
+      toast.success('Result copied to clipboard!');
+    } catch (err) {
+      console.error('Failed to copy image:', err);
+      toast.error('Failed to copy image. Try again.');
+    }
+  };
+
   const handleSpin = () => {
     const nameList = names.split(',').map(n => n.trim()).filter(Boolean);
     if (nameList.length === 0 || !task) {
-      alert('Please provide at least one name and a task.');
+      toast.error('Please provide at least one name and a task.');
       return;
     }
     if (nameList.length > MAX_PARTICIPANTS) {
-      alert(`Too many participants! Maximum is ${MAX_PARTICIPANTS}.`);
+      toast.error(`Too many participants! Maximum is ${MAX_PARTICIPANTS}.`);
       return;
     }
 
@@ -107,6 +134,14 @@ const WheelOfChumps = () => {
         if (rotationRef.current) {
           cancelAnimationFrame(rotationRef.current);
         }
+
+        confetti({
+          particleCount: 150,
+          spread: 70,
+          origin: { y: 0.6 },
+          colors: ['#ec4899', '#d946ef', '#a855f7', '#22d3ee']
+        });
+
         return;
       }
 
@@ -127,8 +162,47 @@ const WheelOfChumps = () => {
     };
   }, []);
 
+  useEffect(() => {
+    const handleKeyPress = (e) => {
+      if (e.key === 'Enter' && !spinning && !result) {
+        e.preventDefault();
+        handleSpin();
+      } else if (e.key === ' ' && result && !spinning) {
+        e.preventDefault();
+        handleReset();
+      } else if (e.key === 'Escape' && result) {
+        e.preventDefault();
+        handleReset();
+      }
+    };
+
+    window.addEventListener('keydown', handleKeyPress);
+    return () => window.removeEventListener('keydown', handleKeyPress);
+  }, [spinning, result, names, task]);
+
   return (
     <div className="relative min-h-screen bg-gradient-to-br from-[#0f0c29] via-[#302b63] to-[#24243e] text-white font-mono overflow-hidden">
+      <Toaster
+        position="top-center"
+        toastOptions={{
+          error: {
+            style: {
+              background: '#1a1625',
+              color: '#ec4899',
+              border: '1px solid #ec4899',
+              fontFamily: 'monospace',
+            },
+          },
+          success: {
+            style: {
+              background: '#1a1625',
+              color: '#22d3ee',
+              border: '1px solid #22d3ee',
+              fontFamily: 'monospace',
+            },
+          },
+        }}
+      />
       <div className="absolute top-4 left-4 z-20 flex items-center gap-2">
         <motion.div
           initial={{ scale: 0, rotate: -180 }}
@@ -249,7 +323,7 @@ const WheelOfChumps = () => {
                   <div className="absolute -bottom-6 -left-6 w-8 h-8 border-b-2 border-l-2 border-cyan-400"></div>
                   <div className="absolute -bottom-6 -right-6 w-8 h-8 border-b-2 border-r-2 border-cyan-400"></div>
 
-                  <div className="w-80 h-80 bg-black/90 backdrop-blur-md border-2 border-cyan-400/60 rounded-2xl p-8 shadow-[0_0_80px_rgba(34,211,238,0.6)] flex items-center justify-center">
+                  <div ref={resultRef} className="w-80 h-80 bg-black/90 backdrop-blur-md border-2 border-cyan-400/60 rounded-2xl p-8 shadow-[0_0_80px_rgba(34,211,238,0.6)] flex items-center justify-center">
                     <div className="text-center space-y-4">
                       <div className="text-yellow-400 text-xl font-bold mb-3"
                            style={{ textShadow: '0 0 20px rgba(250, 204, 21, 0.8)' }}>
@@ -282,16 +356,28 @@ const WheelOfChumps = () => {
             </div>
           )}
 
-          <motion.button
-            initial={{ opacity: 0, scale: 0.9 }}
-            animate={{ opacity: result && !spinning ? 1 : 0, scale: result && !spinning ? 1 : 0.9 }}
-            transition={{ delay: 0.5 }}
-            onClick={handleReset}
-            className="mt-6 px-8 py-3 font-bold text-lg bg-gradient-to-r from-cyan-500 to-purple-600 hover:from-purple-600 hover:to-cyan-500 text-white rounded-lg shadow-lg shadow-cyan-500/30 hover:shadow-cyan-500/50 transition-all duration-300 uppercase tracking-wider z-10"
-            style={{ visibility: result && !spinning ? 'visible' : 'hidden', pointerEvents: result && !spinning ? 'auto' : 'none' }}
-          >
-            Spin Again
-          </motion.button>
+          <div className="flex gap-4 mt-6">
+            <motion.button
+              initial={{ opacity: 0, scale: 0.9 }}
+              animate={{ opacity: result && !spinning ? 1 : 0, scale: result && !spinning ? 1 : 0.9 }}
+              transition={{ delay: 0.5 }}
+              onClick={handleCopyImage}
+              className="px-6 py-3 font-bold text-base bg-gradient-to-r from-pink-500 to-fuchsia-600 hover:from-fuchsia-600 hover:to-pink-500 text-white rounded-lg shadow-lg shadow-pink-500/30 hover:shadow-pink-500/50 transition-all duration-300 uppercase tracking-wider z-10"
+              style={{ visibility: result && !spinning ? 'visible' : 'hidden', pointerEvents: result && !spinning ? 'auto' : 'none' }}
+            >
+              Copy Image
+            </motion.button>
+            <motion.button
+              initial={{ opacity: 0, scale: 0.9 }}
+              animate={{ opacity: result && !spinning ? 1 : 0, scale: result && !spinning ? 1 : 0.9 }}
+              transition={{ delay: 0.5 }}
+              onClick={handleReset}
+              className="px-8 py-3 font-bold text-lg bg-gradient-to-r from-cyan-500 to-purple-600 hover:from-purple-600 hover:to-cyan-500 text-white rounded-lg shadow-lg shadow-cyan-500/30 hover:shadow-cyan-500/50 transition-all duration-300 uppercase tracking-wider z-10"
+              style={{ visibility: result && !spinning ? 'visible' : 'hidden', pointerEvents: result && !spinning ? 'auto' : 'none' }}
+            >
+              Spin Again
+            </motion.button>
+          </div>
         </div>
       </div>
     </div>

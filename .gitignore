@@ -22,3 +22,6 @@ dist-ssr
 *.njsproj
 *.sln
 *.sw?
+
+# Future features document (not committed)
+FUTURE_FEATURES.md
