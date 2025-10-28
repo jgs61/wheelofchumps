@@ -12,6 +12,7 @@ const WheelOfChumps = () => {
   const [result, setResult] = useState(null);
   const [currentDisplay, setCurrentDisplay] = useState('');
   const [rotation, setRotation] = useState(0);
+  const [isCapturing, setIsCapturing] = useState(false);
   const intervalRef = useRef(null);
   const rotationRef = useRef(null);
   const resultRef = useRef(null);
@@ -45,10 +46,17 @@ const WheelOfChumps = () => {
     if (!resultRef.current) return;
 
     try {
+      setIsCapturing(true);
+      await new Promise(resolve => setTimeout(resolve, 300));
+
       const blob = await toPng(resultRef.current, {
         cacheBust: true,
-        backgroundColor: 'transparent',
+        backgroundColor: '#000000',
         pixelRatio: 2,
+        skipAutoScale: true,
+        filter: (node) => {
+          return !node.classList?.contains('copy-exclude');
+        }
       }).then(dataUrl => {
         return fetch(dataUrl).then(res => res.blob());
       });
@@ -61,6 +69,8 @@ const WheelOfChumps = () => {
     } catch (err) {
       console.error('Failed to copy image:', err);
       toast.error('Failed to copy image. Try again.');
+    } finally {
+      setIsCapturing(false);
     }
   };
 
@@ -330,15 +340,20 @@ const WheelOfChumps = () => {
                         Uh oh! Looks like...
                       </div>
                       <motion.div
-                        animate={{
+                        animate={!isCapturing ? {
                           filter: [
                             'drop-shadow(0 0 20px rgba(236, 72, 153, 0.8))',
                             'drop-shadow(0 0 40px rgba(236, 72, 153, 1))',
                             'drop-shadow(0 0 20px rgba(236, 72, 153, 0.8))',
                           ]
-                        }}
+                        } : {}}
                         transition={{ duration: 1.5, repeat: Infinity }}
-                        className="text-6xl font-black text-transparent bg-clip-text bg-gradient-to-r from-pink-400 via-fuchsia-500 to-purple-600 mb-4"
+                        className={`text-6xl font-black mb-4 ${
+                          isCapturing
+                            ? 'text-pink-400'
+                            : 'text-transparent bg-clip-text bg-gradient-to-r from-pink-400 via-fuchsia-500 to-purple-600'
+                        }`}
+                        style={isCapturing ? { textShadow: '0 0 30px rgba(236, 72, 153, 0.9)' } : {}}
                       >
                         {result}
                       </motion.div>
